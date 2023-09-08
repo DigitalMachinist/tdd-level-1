@@ -3,9 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\Fraction\FractionServiceContract;
-use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
 
 class AddFractionCommand extends Command
 {
@@ -29,11 +27,12 @@ class AddFractionCommand extends Command
      */
     public function handle(FractionServiceContract $fractionService)
     {
-        $inputs = new Collection($this->argument('fractions'));
+        $fractions = array_map(
+            fn (string $input) => $fractionService->fromString($input),
+            $this->argument('fractions')
+        );
 
-        $fractions = $inputs->map(fn (string $x) => $fractionService->fromString($x));
-
-        $result = $fractionService->add($fractions->toArray());
+        $result = $fractionService->add($fractions);
 
         $this->info($fractionService->toImproperFractionString($result));
     }

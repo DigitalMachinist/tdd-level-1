@@ -2,10 +2,14 @@
 
 namespace App\Services\Fraction;
 
-use ArrayAccess;
 use Exception;
 use Illuminate\Support\Collection;
 
+/**
+ * This is an attempt at handling Fractions in a services-based way. Not sure I like the result as compared to an object-oriented approach, 
+ * but it has interesting implications for being able to swap out implementation of the service for situations where you want to use different
+ * algorithmic approaches. I can't imagine why you'd do that with Fractions, but it's an interesting idea.
+ */
 class FractionService implements FractionServiceContract
 {
     public function fromFraction(Fraction $fraction): Fraction
@@ -45,7 +49,7 @@ class FractionService implements FractionServiceContract
         $unscaledResult = new Fraction($numerator, $denominator);
 
         // Reduce the fraction to its lowest terms.
-        // TODO: Could be improved by separating out the algo for obtaining prive factors.
+        // TODO: Could be improved by separating out the algo for obtaining prime factors.
         $i = 2;
         $result = $unscaledResult;
         while ($i <= abs(min($result->numerator, $result->denominator))) {
