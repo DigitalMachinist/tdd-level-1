@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Fraction\FractionServiceContract;
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 
 class AddFractionCommand extends Command
 {
@@ -25,71 +27,14 @@ class AddFractionCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(FractionServiceContract $fractionService)
     {
-        $fractions = $this->argument('fractions');
+        $inputs = new Collection($this->argument('fractions'));
 
-        foreach ($fractions as $fraction) {
-            if (!preg_match('/^\d+\/\d+$/', $fraction)) {
-                throw new Exception('Invalid fraction: ' . $fraction);
-            }
-        }
+        $fractions = $inputs->map(fn (string $x) => $fractionService->fromString($x));
 
-        $parsedFractions = array_map(function ($fraction) {
-            return explode('/', $fraction);
-        }, $fractions);
+        $result = $fractionService->add($fractions->toArray());
 
-        // dump($parsedFractions);
-
-        $denominator = array_reduce($parsedFractions, function ($carry, $item) {
-            return $carry * $item[1];
-        }, 1);
-
-        // dump($denominator);
-
-        $scaledFractions = array_map(function ($fraction) use ($denominator) {
-            return [
-                $fraction[0] * ($denominator / $fraction[1]),
-                $denominator,
-            ];
-        }, $parsedFractions);
-
-        // dump($scaledFractions);
-
-        $numerator = array_reduce($scaledFractions, function ($carry, $item) {
-            return $carry + $item[0];
-        }, 0);
-
-        // dump($numerator);
-
-        $fraction = [
-            $numerator,
-            $denominator,
-        ];
-
-        // dump($fraction);
-
-        $i = 2;
-        $reducedFraction = $fraction;
-        while ($i <= min($reducedFraction[0], $reducedFraction[1])) {
-            if ($reducedFraction[0] % $i === 0 && $reducedFraction[1] % $i === 0) {
-                $reducedFraction = [
-                    $reducedFraction[0] / $i,
-                    $reducedFraction[1] / $i,
-                ];
-                // dump($reducedFraction);
-                $i = 2;
-            }
-            else {
-                $i++;
-            }
-        }
-
-        if ($reducedFraction[1] > 1) {
-            $this->info($reducedFraction[0] . '/' . $reducedFraction[1]);
-        }
-        else {
-            $this->info($reducedFraction[0]);
-        }
+        $this->info($fractionService->toImproperFractionString($result));
     }
 }

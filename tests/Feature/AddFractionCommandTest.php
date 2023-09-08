@@ -51,6 +51,37 @@ class AddFractionCommandTest extends TestCase
             ->execute();
     }
 
+    public function testAddFractionCommandReducesNegativeResultsToWholeNumbers(): void
+    {
+        $this
+            ->artisan('fraction:add', [
+                'fractions' => ['-10/4', '-6/4'], // Need the -- to satisfy bash that this isn't a flag.
+            ])
+            ->expectsOutputToContain('-4')
+            ->execute();
+    }
+    
+
+    public function testAddFractionCommandReducesDoubleNegativeResultsToPositiveResults(): void
+    {
+        $this
+            ->artisan('fraction:add', [
+                'fractions' => ['1/4', '-1/2'],
+            ])
+            ->expectsOutputToContain('-1/4')
+            ->execute();
+    }
+
+    public function testAddFractionCommandMovesNegativeOnDenominatorToNumerator(): void
+    {
+        $this
+            ->artisan('fraction:add', [
+                'fractions' => ['1/-4', '1/-2'],
+            ])
+            ->expectsOutputToContain('-3/4')
+            ->execute();
+    }
+
     public function testAddFractionCommandThrowsExceptionForInvalidInputs(): void
     {
         $this->expectException(Exception::class);
