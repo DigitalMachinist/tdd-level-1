@@ -2,7 +2,6 @@
 
 namespace App\Services\Fraction;
 
-use ArrayAccess;
 use Exception;
 
 interface FractionServiceContract
@@ -28,7 +27,14 @@ interface FractionServiceContract
 
     /**
      * @param Fraction $fraction
+     * @return Fraction
+     */
+    public function reduce(Fraction $fraction): Fraction;
+
+    /**
+     * @param Fraction $fraction
+     * @param bool $reduce
      * @return string
      */
-    public function toImproperFractionString(Fraction $fraction): string;
+    public function toImproperFractionString(Fraction $fraction, bool $reduce = true): string;
 }

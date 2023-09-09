@@ -12,11 +12,20 @@ use Illuminate\Support\Collection;
  */
 class FractionService implements FractionServiceContract
 {
+    /**
+     * @param Fraction $fraction
+     * @return Fraction
+     */
     public function fromFraction(Fraction $fraction): Fraction
     {
         return new Fraction($fraction->numerator, $fraction->denominator);
     }
 
+    /**
+     * @param string $fraction
+     * @return Fraction
+     * @throws Exception
+     */
     public function fromString(string $fraction): Fraction
     {
         if (!preg_match('/^-?\d+\/-?\d+$/', $fraction)) {
@@ -46,12 +55,24 @@ class FractionService implements FractionServiceContract
 
         // Add the numerators together to get the numerator scaled to the common denominator and make a fraction from it.
         $numerator = $scaledFractions->reduce(fn (int $carry, Fraction $fraction) => $carry + $fraction->numerator, 0);
-        $unscaledResult = new Fraction($numerator, $denominator);
+        $result = new Fraction($numerator, $denominator);
 
+        // Reduce the fraction to its lowest terms.
+        $result = $this->reduce($result);
+
+        return $result;
+    }
+
+    /**
+     * @param Fraction $fraction
+     * @return Fraction
+     */
+    public function reduce(Fraction $fraction): Fraction
+    {
         // Reduce the fraction to its lowest terms.
         // TODO: Could be improved by separating out the algo for obtaining prime factors.
         $i = 2;
-        $result = $unscaledResult;
+        $result = $this->fromFraction($fraction);
         while ($i <= abs(min($result->numerator, $result->denominator))) {
             // If the numerator or denominator is not divisible by the current value of $i, then it is not a common factor. Keep counting.
             if ($result->numerator % $i !== 0 || $result->denominator % $i !== 0) {
@@ -68,8 +89,18 @@ class FractionService implements FractionServiceContract
         return $result;
     }
 
-    public function toImproperFractionString(Fraction $fraction): string
+    /**
+     * @param Fraction $fraction
+     * @param bool $reduce
+     * @return string
+     */
+    public function toImproperFractionString(Fraction $fraction, bool $reduce = true): string
     {
+        if ($reduce) {
+            // Reduce the fraction to its lowest terms.
+            $fraction = $this->reduce($fraction);
+        }
+
         $numerator = $fraction->numerator;
         $denominator = $fraction->denominator;
 
